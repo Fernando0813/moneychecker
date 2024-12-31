@@ -33,6 +33,7 @@ users = {
 # Fungsi untuk halaman Sign In
 def sign_in():
     st.title("Sign In")
+    st.info("Jika anda bukan seorang admin, silahkan ketik viewer di username dan pilih user yang ingin anda lihat")
     
     # Input untuk username dan password
     username = st.text_input("Username")
