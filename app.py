@@ -21,14 +21,13 @@ def format_rupiah(amount):
 
 # Data untuk username dan password
 users = {
-    "Admin Basket": "123",
-    "Admin Badminton": "123", 
+    "Basket": "123",
+    "Badminton": "123", 
     "Nando": "123",
     "Ara": "123",
     "Adhit": "123", 
     "Nafi": "123",
-    "Viewer Badminton": "123",
-    "Viewer Basket": "123",
+    "Viewer": "123"
 }
 
 # Fungsi untuk halaman Sign In
@@ -39,19 +38,35 @@ def sign_in():
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
     
+    # Konversi username ke format yang benar
+    corrected_username = None
+    for valid_user in users.keys():
+        if username.lower() == valid_user.lower():
+            corrected_username = valid_user
+            break
+    
+    # Jika username adalah viewer, tampilkan select box untuk memilih user yang akan dilihat
+    if corrected_username == "Viewer" or username.lower() == "viewer":
+        available_users = ["Basket", "Badminton", "Nando", "Ara", "Adhit", "Nafi"]
+        selected_user = st.selectbox("Pilih user yang akan dilihat:", available_users)
+        if "selected_user" not in st.session_state:
+            st.session_state["selected_user"] = selected_user
+    
     # Cek jika login button ditekan
     if st.button("Login"):
-        if username in users and users[username] == password:
+        if corrected_username and users[corrected_username] == password:
             # Menyimpan status login di session state
             st.session_state["logged_in"] = True
-            st.session_state["username"] = username
+            st.session_state["username"] = corrected_username
+            if corrected_username == "Viewer":
+                st.session_state["selected_user"] = selected_user
             st.session_state["page"] = "second_page"
             
             # Inisialisasi data untuk user jika belum ada
             if "user_data" not in st.session_state:
                 st.session_state["user_data"] = {}
-            if username not in st.session_state["user_data"] and username != "viewer":
-                st.session_state["user_data"][username] = []
+            if corrected_username not in st.session_state["user_data"] and corrected_username != "Viewer":
+                st.session_state["user_data"][corrected_username] = []
                 
             st.rerun()
         else:
@@ -64,20 +79,20 @@ def second_page():
     
     username = st.session_state["username"]
     
-    if username in ["Viewer Badminton", "Viewer Basket"]:
+    if username == "Viewer":
         # Tampilan khusus untuk viewer
-        st.header("Data Semua Users")
+        st.header("Data Pembayaran")
+        target_user = st.session_state["selected_user"]
         
         if "user_data" in st.session_state and st.session_state["user_data"]:
             # Gabungkan semua data user
             all_data = []
-            admin_type = "Admin Badminton" if username == "Viewer Badminton" else "Admin Basket"
             
-            # Hanya ambil data dari admin yang sesuai
-            if admin_type in st.session_state["user_data"]:
-                for item in st.session_state["user_data"][admin_type]:
+            # Hanya ambil data dari user yang sesuai
+            if target_user in st.session_state["user_data"]:
+                for item in st.session_state["user_data"][target_user]:
                     item_with_user = item.copy()
-                    item_with_user["username"] = admin_type
+                    item_with_user["username"] = target_user
                     all_data.append(item_with_user)
             
             if all_data:
@@ -154,7 +169,7 @@ def second_page():
                 else:
                     st.info("Tidak ada data yang sesuai dengan filter yang dipilih")
             else:
-                st.info("Belum ada data pembayaran dari admin")
+                st.info("Belum ada data pembayaran")
     else:
         # Tampilan untuk user biasa
         tab1, tab2, tab3 = st.tabs(["Input Data", "Data Pembayaran", "Histori Pembayaran"])
