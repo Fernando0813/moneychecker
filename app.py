@@ -4,7 +4,20 @@ from datetime import datetime
 import locale
 
 # Set locale untuk format Rupiah
-locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8')
+try:
+    locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8')
+except:
+    try:
+        locale.setlocale(locale.LC_ALL, 'id_ID')
+    except:
+        locale.setlocale(locale.LC_ALL, '')  # Fallback ke default locale
+
+# Tambahkan fungsi format rupiah sebagai alternatif
+def format_rupiah(amount):
+    try:
+        return locale.currency(amount, grouping=True)
+    except:
+        return f"Rp {amount:,.0f}"
 
 # Data untuk username dan password
 users = {
