@@ -1,23 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import locale
-
-# Set locale untuk format Rupiah
-try:
-    locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8')
-except:
-    try:
-        locale.setlocale(locale.LC_ALL, 'id_ID')
-    except:
-        locale.setlocale(locale.LC_ALL, '')  # Fallback ke default locale
-
-# Tambahkan fungsi format rupiah sebagai alternatif
-def format_rupiah(amount):
-    try:
-        return locale.currency(amount, grouping=True)
-    except:
-        return f"Rp {amount:,.0f}"
 
 # Data untuk username dan password
 users = {
@@ -29,6 +12,10 @@ users = {
     "Nafi": "123",
     "Viewer": "123"
 }
+
+# Fungsi untuk format rupiah tanpa locale
+def format_rupiah(amount):
+    return f"Rp {amount:,.0f}"
 
 # Fungsi untuk halaman Sign In
 def sign_in():
@@ -121,7 +108,7 @@ def second_page():
                 
                 if not df.empty:
                     # Format harga ke Rupiah
-                    df["harga"] = df["harga"].apply(lambda x: locale.currency(x, grouping=True))
+                    df["harga"] = df["harga"].apply(format_rupiah)
                     
                     # Tampilkan header
                     col1, col2, col3, col4, col5, col6, col7 = st.columns([2,2,2,2,2,2,2])
@@ -236,7 +223,7 @@ def second_page():
                 
                 if not df.empty:
                     # Format harga ke Rupiah
-                    df["harga"] = df["harga"].apply(lambda x: locale.currency(x, grouping=True))
+                    df["harga"] = df["harga"].apply(format_rupiah)
                     
                     # Tampilkan header
                     col1, col2, col3, col4, col5, col6 = st.columns([2,2,2,2,2,2])
@@ -294,7 +281,7 @@ def second_page():
                     df_paid = pd.DataFrame(paid_data)
                     
                     # Format harga ke Rupiah
-                    df_paid["harga"] = df_paid["harga"].apply(lambda x: locale.currency(x, grouping=True))
+                    df_paid["harga"] = df_paid["harga"].apply(format_rupiah)
                     
                     # Tampilkan header
                     col1, col2, col3, col4, col5, col6 = st.columns([2,2,2,2,2,2])
