@@ -133,39 +133,62 @@ def second_page():
                     is_mobile = st.session_state.get('is_mobile', len(st.session_state) < 4)
                     
                     if is_mobile:
-                        # Tampilan mobile - card style
+                        # Tampilan mobile - horizontal scroll
+                        st.write(
+                            """
+                            <style>
+                            .scroll-container {
+                                overflow-x: auto;
+                                white-space: nowrap;
+                            }
+                            .card {
+                                display: inline-block;
+                                width: 300px;
+                                margin-right: 10px;
+                                padding: 10px;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                vertical-align: top;
+                            }
+                            </style>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                        
+                        st.write('<div class="scroll-container">', unsafe_allow_html=True)
                         for idx, row in df.iterrows():
-                            with st.container():
-                                st.markdown("---")
-                                st.write(f"**Username:** {row['username']}")
-                                st.write(f"**Jenis:** {row['jenis']}")
-                                st.write(f"**Nama:** {row['nama']}")
-                                st.write(f"**Tanggal:** {row['tanggal']}")
-                                st.write(f"**Harga:** {row['harga']}")
-                                
-                                user = row["username"]
-                                data_idx = st.session_state["user_data"][user].index(next(item for item in st.session_state["user_data"][user] if item["nama"] == row["nama"] and item["tanggal"] == row["tanggal"]))
-                                old_status = st.session_state["user_data"][user][data_idx]["status"]
-                                
-                                col1, col2 = st.columns([2,2])
-                                with col1:
-                                    st.write("**Status:**")
-                                with col2:
-                                    status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Sudah Bayar"], 
-                                                        index=0 if old_status == "Belum Bayar" else 1, 
-                                                        key=f"status_{user}_{idx}",
-                                                        label_visibility="collapsed")
-                                
-                                if old_status != status:
-                                    if status == "Sudah Bayar":
-                                        st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                    else:
-                                        st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = None
-                                    st.session_state["user_data"][user][data_idx]["status"] = status
-                                    save_data()
-                                    st.rerun()
-                                
-                                st.write(f"**Tanggal Bayar:** {row['tanggal_bayar'] if 'tanggal_bayar' in row and row['tanggal_bayar'] else '-'}")
+                            st.write(
+                                f"""
+                                <div class="card">
+                                    <p><strong>Username:</strong> {row['username']}</p>
+                                    <p><strong>Jenis:</strong> {row['jenis']}</p>
+                                    <p><strong>Nama:</strong> {row['nama']}</p>
+                                    <p><strong>Tanggal:</strong> {row['tanggal']}</p>
+                                    <p><strong>Harga:</strong> {row['harga']}</p>
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
+                            
+                            user = row["username"]
+                            data_idx = st.session_state["user_data"][user].index(next(item for item in st.session_state["user_data"][user] if item["nama"] == row["nama"] and item["tanggal"] == row["tanggal"]))
+                            old_status = st.session_state["user_data"][user][data_idx]["status"]
+                            
+                            status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Sudah Bayar"], 
+                                                index=0 if old_status == "Belum Bayar" else 1, 
+                                                key=f"status_{user}_{idx}")
+                            
+                            if old_status != status:
+                                if status == "Sudah Bayar":
+                                    st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                else:
+                                    st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = None
+                                st.session_state["user_data"][user][data_idx]["status"] = status
+                                save_data()
+                                st.rerun()
+                            
+                            st.write(f"**Tanggal Bayar:** {row['tanggal_bayar'] if 'tanggal_bayar' in row and row['tanggal_bayar'] else '-'}")
+                        st.write('</div>', unsafe_allow_html=True)
                     else:
                         # Tampilan desktop - table style
                         col1, col2, col3, col4, col5, col6, col7 = st.columns([2,2,2,2,2,2,2])
