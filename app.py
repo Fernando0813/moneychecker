@@ -3,6 +3,8 @@ import pandas as pd
 from datetime import datetime
 import json
 import os
+import requests
+import base64
 
 # Data untuk username dan password
 users = {
@@ -15,18 +17,82 @@ users = {
     "Viewer": "123"
 }
 
-# Fungsi untuk menyimpan data ke file
+# Fungsi untuk menyimpan data ke GitHub
 def save_data():
     if "user_data" in st.session_state:
-        with open('user_data.json', 'w') as f:
-            json.dump(st.session_state["user_data"], f)
+        try:
+            # Kredensial GitHub
+            github_token = "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"
+            repo_owner = "Fernando0813"
+            repo_name = "moneychecker"
+            file_path = "user_data.json"
+            
+            # API endpoint
+            url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
+            
+            # Headers untuk autentikasi
+            headers = {
+                "Authorization": f"token {github_token}",
+                "Accept": "application/vnd.github.v3+json"
+            }
+            
+            # Get existing file's SHA if it exists
+            response = requests.get(url, headers=headers)
+            
+            # Encode content
+            content = json.dumps(st.session_state["user_data"])
+            content_bytes = content.encode('utf-8')
+            base64_content = base64.b64encode(content_bytes).decode('utf-8')
+            
+            data = {
+                "message": "Update user data",
+                "content": base64_content
+            }
+            
+            if response.status_code == 200:
+                # File exists, include SHA
+                data["sha"] = response.json()["sha"]
+                
+            # Update file on GitHub
+            response = requests.put(url, headers=headers, json=data)
+            
+            if response.status_code not in [200, 201]:
+                st.error("Gagal menyimpan data ke GitHub")
+                
+        except Exception as e:
+            st.error(f"Error saat menyimpan ke GitHub: {str(e)}")
 
-# Fungsi untuk memuat data dari file
+# Fungsi untuk memuat data dari GitHub
 def load_data():
-    if os.path.exists('user_data.json'):
-        with open('user_data.json', 'r') as f:
-            st.session_state["user_data"] = json.load(f)
-    else:
+    try:
+        # Kredensial GitHub
+        github_token = "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"
+        repo_owner = "Fernando0813"
+        repo_name = "moneychecker"
+        file_path = "user_data.json"
+        
+        # API endpoint
+        url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
+        
+        # Headers untuk autentikasi
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        # Get file dari GitHub
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            # Decode content dari base64
+            content = response.json()["content"]
+            decoded_content = base64.b64decode(content).decode('utf-8')
+            st.session_state["user_data"] = json.loads(decoded_content)
+        else:
+            st.session_state["user_data"] = {}
+            
+    except Exception as e:
+        st.error(f"Error saat memuat data dari GitHub: {str(e)}")
         st.session_state["user_data"] = {}
 
 # Fungsi untuk format rupiah tanpa locale
@@ -423,9 +489,8 @@ if "logged_in" not in st.session_state:
     st.session_state["username"] = None
     st.session_state["page"] = "sign_in"
 
-# Load data saat aplikasi dimulai
-if "user_data" not in st.session_state:
-    load_data()
+# Load data saat aplikasi dimulai dan setiap kali halaman di-refresh
+load_data()
 
 # Navigasi berdasarkan session_state["page"]
 if st.session_state["page"] == "sign_in" and not st.session_state["logged_in"]:
