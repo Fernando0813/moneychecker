@@ -22,7 +22,7 @@ def save_data():
     if "user_data" in st.session_state:
         try:
             # Kredensial GitHub
-            github_token = "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"
+            github_token = st.secrets["github_token"]
             repo_owner = "Fernando0813"
             repo_name = "moneychecker"
             file_path = "user_data.json"
@@ -66,7 +66,7 @@ def save_data():
 def load_data():
     try:
         # Kredensial GitHub
-        github_token = "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"
+        github_token = st.secrets["github_token"]
         repo_owner = "Fernando0813"
         repo_name = "moneychecker"
         file_path = "user_data.json"
