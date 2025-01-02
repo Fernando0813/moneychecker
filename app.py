@@ -129,51 +129,92 @@ def second_page():
                     # Format harga ke Rupiah
                     df["harga"] = df["harga"].apply(format_rupiah)
                     
-                    # Tampilkan header
-                    col1, col2, col3, col4, col5, col6, col7 = st.columns([2,2,2,2,2,2,2])
-                    with col1:
-                        st.write("**Username**")
-                    with col2:
-                        st.write("**Jenis**")
-                    with col3:
-                        st.write("**Nama**")
-                    with col4:
-                        st.write("**Tanggal**")
-                    with col5:
-                        st.write("**Harga**")
-                    with col6:
-                        st.write("**Status**")
-                    with col7:
-                        st.write("**Tanggal Bayar**")
+                    # Deteksi device
+                    is_mobile = st.session_state.get('is_mobile', len(st.session_state) < 4)
                     
-                    # Tampilkan setiap baris
-                    for idx, row in df.iterrows():
+                    if is_mobile:
+                        # Tampilan mobile - card style
+                        for idx, row in df.iterrows():
+                            with st.container():
+                                st.markdown("---")
+                                st.write(f"**Username:** {row['username']}")
+                                st.write(f"**Jenis:** {row['jenis']}")
+                                st.write(f"**Nama:** {row['nama']}")
+                                st.write(f"**Tanggal:** {row['tanggal']}")
+                                st.write(f"**Harga:** {row['harga']}")
+                                
+                                user = row["username"]
+                                data_idx = st.session_state["user_data"][user].index(next(item for item in st.session_state["user_data"][user] if item["nama"] == row["nama"] and item["tanggal"] == row["tanggal"]))
+                                old_status = st.session_state["user_data"][user][data_idx]["status"]
+                                
+                                col1, col2 = st.columns([2,2])
+                                with col1:
+                                    st.write("**Status:**")
+                                with col2:
+                                    status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Sudah Bayar"], 
+                                                        index=0 if old_status == "Belum Bayar" else 1, 
+                                                        key=f"status_{user}_{idx}",
+                                                        label_visibility="collapsed")
+                                
+                                if old_status != status:
+                                    if status == "Sudah Bayar":
+                                        st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    else:
+                                        st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = None
+                                    st.session_state["user_data"][user][data_idx]["status"] = status
+                                    save_data()
+                                    st.rerun()
+                                
+                                st.write(f"**Tanggal Bayar:** {row['tanggal_bayar'] if 'tanggal_bayar' in row and row['tanggal_bayar'] else '-'}")
+                    else:
+                        # Tampilan desktop - table style
                         col1, col2, col3, col4, col5, col6, col7 = st.columns([2,2,2,2,2,2,2])
                         with col1:
-                            st.write(row["username"])
+                            st.write("**Username**")
                         with col2:
-                            st.write(row["jenis"])
+                            st.write("**Jenis**")
                         with col3:
-                            st.write(row["nama"])
+                            st.write("**Nama**")
                         with col4:
-                            st.write(row["tanggal"])
+                            st.write("**Tanggal**")
                         with col5:
-                            st.write(row["harga"])
+                            st.write("**Harga**")
                         with col6:
-                            user = row["username"]
-                            data_idx = st.session_state["user_data"][user].index(next(item for item in st.session_state["user_data"][user] if item["nama"] == row["nama"] and item["tanggal"] == row["tanggal"]))
-                            old_status = st.session_state["user_data"][user][data_idx]["status"]
-                            status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Sudah Bayar"], index=0 if old_status == "Belum Bayar" else 1, key=f"status_{user}_{idx}", label_visibility="collapsed")
-                            if old_status != status:
-                                if status == "Sudah Bayar":
-                                    st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                else:
-                                    st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = None
-                                st.session_state["user_data"][user][data_idx]["status"] = status
-                                save_data()  # Simpan perubahan
-                                st.rerun()
+                            st.write("**Status**")
                         with col7:
-                            st.write(row["tanggal_bayar"] if "tanggal_bayar" in row and row["tanggal_bayar"] else "-")
+                            st.write("**Tanggal Bayar**")
+                        
+                        for idx, row in df.iterrows():
+                            col1, col2, col3, col4, col5, col6, col7 = st.columns([2,2,2,2,2,2,2])
+                            with col1:
+                                st.write(row["username"])
+                            with col2:
+                                st.write(row["jenis"])
+                            with col3:
+                                st.write(row["nama"])
+                            with col4:
+                                st.write(row["tanggal"])
+                            with col5:
+                                st.write(row["harga"])
+                            with col6:
+                                user = row["username"]
+                                data_idx = st.session_state["user_data"][user].index(next(item for item in st.session_state["user_data"][user] if item["nama"] == row["nama"] and item["tanggal"] == row["tanggal"]))
+                                old_status = st.session_state["user_data"][user][data_idx]["status"]
+                                status = st.selectbox("Status Pembayaran", ["Belum Bayar", "Sudah Bayar"], 
+                                                    index=0 if old_status == "Belum Bayar" else 1, 
+                                                    key=f"status_{user}_{idx}",
+                                                    label_visibility="collapsed")
+                                
+                                if old_status != status:
+                                    if status == "Sudah Bayar":
+                                        st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    else:
+                                        st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = None
+                                    st.session_state["user_data"][user][data_idx]["status"] = status
+                                    save_data()
+                                    st.rerun()
+                            with col7:
+                                st.write(row["tanggal_bayar"] if "tanggal_bayar" in row and row["tanggal_bayar"] else "-")
                 else:
                     st.info("Tidak ada data yang sesuai dengan filter yang dipilih")
             else:
