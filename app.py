@@ -5,14 +5,6 @@ import json
 import os
 import requests
 import base64
-from openai import OpenAI
-
-# Initialize OpenAI client
-try:
-    client = OpenAI(api_key=st.secrets["openai_api_key"])
-except Exception as e:
-    st.error(f"Error inisialisasi OpenAI: {str(e)}")
-    client = None
 
 # Data untuk username dan password
 users = {
@@ -24,23 +16,6 @@ users = {
     "Nafi": "123",
     "Viewer": "123"
 }
-
-# Fungsi untuk chat dengan AI assistant
-def chat_with_assistant(user_input):
-    if client is None:
-        return "Maaf, AI Assistant sedang tidak tersedia. Mohon periksa konfigurasi API key."
-    
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "Kamu adalah asisten yang membantu menjelaskan cara menggunakan aplikasi Money Checker. Aplikasi ini digunakan untuk mencatat dan melacak pembayaran."},
-                {"role": "user", "content": user_input}
-            ]
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"Maaf, terjadi error: {str(e)}"
 
 # Fungsi untuk menyimpan data ke GitHub
 def save_data():
@@ -133,13 +108,6 @@ def sign_in():
     st.title("Sign In")
     st.info("Jika anda bukan seorang admin, silahkan ketik viewer di username dan pilih user yang ingin anda lihat")
     
-    # Chat assistant section
-    st.sidebar.title("AI Assistant")
-    user_question = st.sidebar.text_input("Ada yang bisa saya bantu?")
-    if user_question:
-        response = chat_with_assistant(user_question)
-        st.sidebar.write("Assistant:", response)
-    
     # Input untuk username dan password
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
@@ -181,13 +149,6 @@ def sign_in():
 def second_page():
     st.title("Selamat Datang!")
     st.write(f"Halo, {st.session_state['username']}! Anda berhasil login.")
-    
-    # Chat assistant section
-    st.sidebar.title("AI Assistant")
-    user_question = st.sidebar.text_input("Ada yang bisa saya bantu?")
-    if user_question:
-        response = chat_with_assistant(user_question)
-        st.sidebar.write("Assistant:", response)
     
     username = st.session_state["username"]
     
