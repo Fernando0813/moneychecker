@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import json
+import os
 
 # Data untuk username dan password
 users = {
@@ -13,12 +15,30 @@ users = {
     "Viewer": "123"
 }
 
+# Fungsi untuk menyimpan data ke file
+def save_data():
+    if "user_data" in st.session_state:
+        with open('user_data.json', 'w') as f:
+            json.dump(st.session_state["user_data"], f)
+
+# Fungsi untuk memuat data dari file
+def load_data():
+    if os.path.exists('user_data.json'):
+        with open('user_data.json', 'r') as f:
+            st.session_state["user_data"] = json.load(f)
+    else:
+        st.session_state["user_data"] = {}
+
 # Fungsi untuk format rupiah tanpa locale
 def format_rupiah(amount):
     return f"Rp {amount:,.0f}"
 
 # Fungsi untuk halaman Sign In
 def sign_in():
+    # Load data saat aplikasi dimulai
+    if "user_data" not in st.session_state:
+        load_data()
+        
     st.title("Sign In")
     st.info("Jika anda bukan seorang admin, silahkan ketik viewer di username dan pilih user yang ingin anda lihat")
     
@@ -51,10 +71,9 @@ def sign_in():
             st.session_state["page"] = "second_page"
             
             # Inisialisasi data untuk user jika belum ada
-            if "user_data" not in st.session_state:
-                st.session_state["user_data"] = {}
             if corrected_username not in st.session_state["user_data"] and corrected_username != "Viewer":
                 st.session_state["user_data"][corrected_username] = []
+                save_data()  # Simpan perubahan
                 
             st.rerun()
         else:
@@ -151,6 +170,7 @@ def second_page():
                                 else:
                                     st.session_state["user_data"][user][data_idx]["tanggal_bayar"] = None
                                 st.session_state["user_data"][user][data_idx]["status"] = status
+                                save_data()  # Simpan perubahan
                                 st.rerun()
                         with col7:
                             st.write(row["tanggal_bayar"] if "tanggal_bayar" in row and row["tanggal_bayar"] else "-")
@@ -198,6 +218,7 @@ def second_page():
                             st.session_state["user_data"][username] = []
                         
                         st.session_state["user_data"][username].append(new_data)
+                        save_data()  # Simpan perubahan
                         st.success("Data berhasil ditambahkan!")
                         
                         # Reset form fields setelah submit
@@ -259,9 +280,11 @@ def second_page():
                             if old_status != status and status == "Sudah Bayar":
                                 st.session_state["user_data"][username][idx]["tanggal_bayar"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             st.session_state["user_data"][username][idx]["status"] = status
+                            save_data()  # Simpan perubahan
                         with col6:
                             if st.button("Hapus", key=f"delete_{idx}"):
                                 st.session_state["user_data"][username].pop(idx)
+                                save_data()  # Simpan perubahan
                                 st.rerun()
                 else:
                     st.info(f"Tidak ada data dengan status {status_filter}")
@@ -335,6 +358,10 @@ if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
     st.session_state["username"] = None
     st.session_state["page"] = "sign_in"
+
+# Load data saat aplikasi dimulai
+if "user_data" not in st.session_state:
+    load_data()
 
 # Navigasi berdasarkan session_state["page"]
 if st.session_state["page"] == "sign_in" and not st.session_state["logged_in"]:
